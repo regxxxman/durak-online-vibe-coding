@@ -33,7 +33,28 @@ const wsService = new WebSocketService(server)
 // Настройка CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: function(origin, callback) {
+      // В режиме разработки разрешаем любой источник
+      if (process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+        return;
+      }
+      
+      // Для продакшена проверяем разрешенные источники
+      const allowedOrigins = [
+        process.env.CLIENT_URL,
+        'https://durak-online-vibe-coding-frontend.onrender.com',
+        'https://durak-online-vibe-coding.onrender.com'
+      ].filter(Boolean); // Удаляем пустые значения
+      
+      // Если origin не указан или он в списке разрешенных, разрешаем запрос
+      if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS блокировка запроса с ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']

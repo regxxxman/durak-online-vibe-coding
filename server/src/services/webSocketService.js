@@ -6,36 +6,47 @@ import { WS_EVENTS } from '../models/constants.js'
 import roomService from '../services/roomService.js'
 
 class WebSocketService {
-  /**
- * Создание WebSocket сервера
- * @param {Object} server - HTTP сервер
- */
-constructor(server) {
-  // Настройки WebSocket сервера
-  this.wss = new WebSocketServer({ 
-    server,
-    // Обработка заголовка Origin для CORS в WebSocket
-    verifyClient: (info) => {
-      const origin = info.origin || info.req.headers.origin;
-      const allowedOrigins = [
-        process.env.CLIENT_URL, 
-        'http://localhost:5173',
-        'https://durak-online-vibe-coding-frontend.onrender.com'
-      ];
-      
-      // Если origin не указан или он в списке разрешенных, пропускаем клиента
-      if (!origin || allowedOrigins.includes(origin)) {
-        return true;
+    /**
+   * Создание WebSocket сервера
+   * @param {Object} server - HTTP сервер
+   */
+  constructor(server) {
+    // Настройки WebSocket сервера
+    this.wss = new WebSocketServer({ 
+      server,
+      // Обработка заголовка Origin для CORS в WebSocket
+      verifyClient: (info) => {
+        const origin = info.origin || info.req.headers.origin;
+        
+        // В режиме разработки принимаем любой источник
+        if (process.env.NODE_ENV !== 'production') {
+          return true;
+        }
+        
+        // Для продакшена проверяем разрешенные источники
+        const allowedOrigins = [
+          process.env.CLIENT_URL, 
+          'https://durak-online-vibe-coding-frontend.onrender.com',
+          'https://durak-online-vibe-coding.onrender.com'
+        ].filter(Boolean); // Удаляем пустые значения
+        
+        // Логируем информацию о соединении
+        console.log(`WebSocket connection attempt from origin: ${origin}`);
+        console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+        
+        // Если origin не указан или он в списке разрешенных, пропускаем клиента
+        if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
+          return true;
+        }
+        
+        console.warn(`Отклонено WebSocket соединение с недопустимого источника: ${origin}`);
+        return false;
       }
-      
-      console.warn(`Отклонено WebSocket соединение с недопустимого источника: ${origin}`);
-      return false;
-    }
-  });
-  
-  this.clients = new Map();
-  this.initializeServer();
-}
+    });
+    
+    this.clients = new Map();
+    this.initializeServer();
+  }
 
   /**
    * Инициализация WebSocket сервера
