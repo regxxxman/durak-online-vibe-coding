@@ -7,15 +7,35 @@ import roomService from '../services/roomService.js'
 
 class WebSocketService {
   /**
-   * Создание WebSocket сервера
-   * @param {Object} server - HTTP сервер
-   */
-  constructor(server) {
-    this.wss = new WebSocketServer({ server })
-    this.clients = new Map()
-
-    this.initializeServer()
-  }
+ * Создание WebSocket сервера
+ * @param {Object} server - HTTP сервер
+ */
+constructor(server) {
+  // Настройки WebSocket сервера
+  this.wss = new WebSocketServer({ 
+    server,
+    // Обработка заголовка Origin для CORS в WebSocket
+    verifyClient: (info) => {
+      const origin = info.origin || info.req.headers.origin;
+      const allowedOrigins = [
+        process.env.CLIENT_URL, 
+        'http://localhost:5173',
+        'https://durak-online-vibe-coding-frontend.onrender.com'
+      ];
+      
+      // Если origin не указан или он в списке разрешенных, пропускаем клиента
+      if (!origin || allowedOrigins.includes(origin)) {
+        return true;
+      }
+      
+      console.warn(`Отклонено WebSocket соединение с недопустимого источника: ${origin}`);
+      return false;
+    }
+  });
+  
+  this.clients = new Map();
+  this.initializeServer();
+}
 
   /**
    * Инициализация WebSocket сервера

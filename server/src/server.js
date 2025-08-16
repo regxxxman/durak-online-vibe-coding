@@ -18,8 +18,8 @@ const __dirname = path.dirname(__filename)
 // Загрузка переменных окружения
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
-// Порт сервера
-const PORT = process.env.SERVER_PORT || 3001
+// Порт сервера - Render.com использует переменную PORT
+const PORT = process.env.PORT || process.env.SERVER_PORT || 3001
 
 // Создание приложения Express
 const app = express()
@@ -35,6 +35,8 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   }),
 )
 
