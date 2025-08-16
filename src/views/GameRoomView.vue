@@ -273,41 +273,50 @@ const isLoser = computed(() => {
 })
 
 // Следим за ошибками при входе в комнату
-watch(() => gameStore.roomNotFound, (roomNotFound) => {
-  if (roomNotFound) {
-    console.error('Комната не найдена')
-    showMessage('Комната не найдена. Возврат в лобби...', 'error')
-    
-    // Очищаем данные комнаты
-    gameStore.currentRoomId = null
-    gameStore.gameState = null
-    
-    // Автоматический выход на главную страницу
-    setTimeout(() => {
-      router.push('/')
-    }, 2000)
-  }
-})
+watch(
+  () => gameStore.roomNotFound,
+  (roomNotFound) => {
+    if (roomNotFound) {
+      console.error('Комната не найдена')
+      showMessage('Комната не найдена. Возврат в лобби...', 'error')
+
+      // Очищаем данные комнаты
+      gameStore.currentRoomId = null
+      gameStore.gameState = null
+
+      // Автоматический выход на главную страницу
+      setTimeout(() => {
+        router.push('/')
+      }, 2000)
+    }
+  },
+)
 
 // Следим за изменением состояния подключения
 watch(isConnected, (connected) => {
   if (!connected && gameStore.webSocket) {
     console.error('WebSocket соединение потеряно')
     showMessage('Соединение с сервером потеряно. Возврат в лобби...', 'error')
-    
+
     // Пытаемся восстановить соединение
     setTimeout(async () => {
       try {
         // Пробуем переподключиться
-        await gameStore.initWebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:3000')
-        
+        // Добавляем логирование WebSocket URL для отладки
+        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+        console.log('Connecting to WebSocket server at:', wsUrl)
+        await gameStore.initWebSocket(wsUrl)
+
         // Если удалось восстановить соединение, пытаемся заново войти в комнату
         if (gameStore.connected && roomId.value && gameStore.playerName) {
           const success = await gameStore.joinRoom(roomId.value, gameStore.playerName)
-          
+
           if (!success) {
             // Если не удалось войти в комнату, перенаправляем в лобби
-            showMessage('Не удалось восстановить соединение с комнатой. Возврат в лобби...', 'error')
+            showMessage(
+              'Не удалось восстановить соединение с комнатой. Возврат в лобби...',
+              'error',
+            )
             setTimeout(() => leaveRoom(), 2000)
           }
         } else {
@@ -329,7 +338,7 @@ onMounted(async () => {
   if (!roomId.value) {
     console.error('Отсутствует ID комнаты')
     showMessage('Неверный URL комнаты. Возврат в лобби...', 'error')
-    
+
     setTimeout(() => {
       router.push('/')
     }, 2000)
@@ -340,7 +349,7 @@ onMounted(async () => {
   if (gameStore.roomNotFound) {
     console.error('Комната не найдена при монтировании компонента')
     showMessage('Комната не найдена. Возврат в лобби...', 'error')
-    
+
     setTimeout(() => {
       router.push('/')
     }, 2000)
@@ -361,12 +370,12 @@ onMounted(async () => {
 
   // Загружаем список комнат для проверки существования
   await gameStore.loadRooms()
-  const roomExists = gameStore.availableRooms.some(room => room.id === roomId.value)
-  
+  const roomExists = gameStore.availableRooms.some((room) => room.id === roomId.value)
+
   if (!roomExists) {
     console.error(`Комната с ID ${roomId.value} не найдена в списке`)
     showMessage('Комната не найдена в списке доступных комнат. Возврат в лобби...', 'error')
-    
+
     setTimeout(() => {
       router.push('/')
     }, 2000)
@@ -376,25 +385,25 @@ onMounted(async () => {
   // Подключаемся к игровой комнате
   if (roomId.value) {
     const success = await gameStore.joinRoom(roomId.value, gameStore.playerName as string)
-    
+
     // Если не удалось подключиться к комнате, переходим на главную страницу
     if (!success || gameStore.roomNotFound) {
       console.error('Не удалось подключиться к комнате')
       showMessage('Комната не найдена или недоступна. Возврат в лобби...', 'error')
-      
+
       // Задержка перед переходом, чтобы пользователь увидел сообщение
       setTimeout(() => {
         router.push('/')
       }, 2000)
       return
     }
-    
+
     // Дополнительная проверка - получили ли мы состояние игры и комнаты
     setTimeout(() => {
       if (!gameState.value && !room.value) {
         console.error('Не удалось получить данные комнаты после подключения')
         showMessage('Не удалось загрузить данные комнаты. Возврат в лобби...', 'error')
-        
+
         setTimeout(() => {
           leaveRoom()
         }, 2000)

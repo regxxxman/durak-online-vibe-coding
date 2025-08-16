@@ -6,48 +6,29 @@ import { WS_EVENTS } from '../models/constants.js'
 import roomService from '../services/roomService.js'
 
 class WebSocketService {
-    /**
+  /**
    * Создание WebSocket сервера
    * @param {Object} server - HTTP сервер
    */
   constructor(server) {
+    console.log('Initializing WebSocket Server')
+
+    // Выводим информацию о переменных окружения для отладки
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
+    console.log(`CLIENT_URL: ${process.env.CLIENT_URL}`)
+    console.log(`SERVER_PORT: ${process.env.SERVER_PORT || process.env.PORT}`)
+
     // Настройки WebSocket сервера
-    this.wss = new WebSocketServer({ 
+    this.wss = new WebSocketServer({
       server,
-      // Обработка заголовка Origin для CORS в WebSocket
-      verifyClient: (info) => {
-        const origin = info.origin || info.req.headers.origin;
-        
-        // В режиме разработки принимаем любой источник
-        if (process.env.NODE_ENV !== 'production') {
-          return true;
-        }
-        
-        // Для продакшена проверяем разрешенные источники
-        const allowedOrigins = [
-          process.env.CLIENT_URL, 
-          'https://durak-online-vibe-coding-frontend.onrender.com',
-          'https://durak-online-vibe-coding.onrender.com',
-          'https://durak-online-vibe-coding-1.onrender.com', // Добавляем этот домен
-          'render.com' // Разрешаем все поддомены render.com
-        ].filter(Boolean); // Удаляем пустые значения
-        
-        // Логируем информацию о соединении
-        console.log(`WebSocket connection attempt from origin: ${origin}`);
-        
-        // Если origin не указан или он содержит один из разрешенных доменов, пропускаем клиента
-        if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
-          console.log(`Разрешено WebSocket соединение с источника: ${origin}`);
-          return true;
-        }
-        
-        console.warn(`Отклонено WebSocket соединение с недопустимого источника: ${origin}`);
-        return false;
-      }
-    });
-    
-    this.clients = new Map();
-    this.initializeServer();
+      // Отключаем проверку origin для отладки
+      verifyClient: () => true,
+    })
+
+    this.clients = new Map()
+    this.initializeServer()
+
+    console.log('WebSocket Server initialized and accepting all connections')
   }
 
   /**

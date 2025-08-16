@@ -44,7 +44,7 @@ export class WebSocketService {
       this.socket.onclose = (event) => {
         console.log('WebSocket closed:', event)
         this.handleDisconnect()
-        
+
         // Вызываем обработчики события отключения
         this.eventHandlers.get(WebSocketEvent.DISCONNECT)?.forEach((handler) => handler(event))
       }
@@ -78,7 +78,7 @@ export class WebSocketService {
   private handleDisconnect() {
     // Немедленно вызываем обработчики события отключения
     this.eventHandlers.get(WebSocketEvent.DISCONNECT)?.forEach((handler) => handler('disconnected'))
-    
+
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000)
 
@@ -87,7 +87,7 @@ export class WebSocketService {
         console.log(`Reconnecting... Attempt ${this.reconnectAttempts}`)
         this.connect().catch((error) => {
           console.error('Reconnection failed:', error)
-          
+
           // Если не удалось переподключиться, генерируем событие ошибки
           if (this.reconnectAttempts >= this.maxReconnectAttempts) {
             this.eventHandlers

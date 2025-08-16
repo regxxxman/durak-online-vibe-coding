@@ -152,10 +152,13 @@ watch(isConnected, (connected) => {
     console.error('WebSocket соединение потеряно')
     // Показываем сообщение пользователю
     alert('Соединение с сервером потеряно. Пожалуйста, обновите страницу.')
-    
+
     // Попытка переподключения через несколько секунд
     setTimeout(async () => {
-      await gameStore.initWebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:3000')
+      // Добавляем логирование WebSocket URL для отладки
+      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+      console.log('Connecting to WebSocket server at:', wsUrl)
+      await gameStore.initWebSocket(wsUrl)
       if (gameStore.connected) {
         // Если подключение восстановлено, обновляем список комнат
         await loadRooms()
@@ -166,7 +169,10 @@ watch(isConnected, (connected) => {
 
 onMounted(async () => {
   // Инициализируем WebSocket соединение
-  await gameStore.initWebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:3000')
+  // Добавляем логирование WebSocket URL для отладки
+  const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
+  console.log('Connecting to WebSocket server at:', wsUrl)
+  await gameStore.initWebSocket(wsUrl)
 
   // Загружаем список комнат
   await loadRooms()

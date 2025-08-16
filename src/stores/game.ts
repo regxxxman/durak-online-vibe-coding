@@ -84,38 +84,38 @@ export const useGameStore = defineStore('game', {
   },
 
   actions: {
-// Инициализация WebSocket соединения
-async initWebSocket(url: string) {
-  // Если соединение уже существует, сначала отключаемся
-  if (this.webSocket) {
-    this.webSocket.disconnect()
-    this.webSocket = null
-  }
-  
-  const wsService = new WebSocketService(url)
+    // Инициализация WebSocket соединения
+    async initWebSocket(url: string) {
+      // Если соединение уже существует, сначала отключаемся
+      if (this.webSocket) {
+        this.webSocket.disconnect()
+        this.webSocket = null
+      }
 
-  try {
-    await wsService.connect()
-    this.connected = true
-    this.error = null
+      const wsService = new WebSocketService(url)
 
-    // Настройка обработчиков событий
-    wsService.on(WebSocketEvent.GAME_STATE, this.handleGameState)
-    wsService.on(WebSocketEvent.JOIN_ROOM, this.handleJoinRoom)
-    wsService.on(WebSocketEvent.CHAT_MESSAGE, this.handleChatMessage)
-    wsService.on(WebSocketEvent.ERROR, this.handleError)
-    wsService.on(WebSocketEvent.DISCONNECT, this.handleDisconnect)
+      try {
+        await wsService.connect()
+        this.connected = true
+        this.error = null
 
-    // Сохраняем сервис в локальной переменной для использования
-    this.webSocket = wsService
-    return true
-  } catch (error) {
-    this.error = 'Failed to connect to game server'
-    this.connected = false
-    console.error(error)
-    return false
-  }
-},    // Загрузка списка доступных комнат
+        // Настройка обработчиков событий
+        wsService.on(WebSocketEvent.GAME_STATE, this.handleGameState)
+        wsService.on(WebSocketEvent.JOIN_ROOM, this.handleJoinRoom)
+        wsService.on(WebSocketEvent.CHAT_MESSAGE, this.handleChatMessage)
+        wsService.on(WebSocketEvent.ERROR, this.handleError)
+        wsService.on(WebSocketEvent.DISCONNECT, this.handleDisconnect)
+
+        // Сохраняем сервис в локальной переменной для использования
+        this.webSocket = wsService
+        return true
+      } catch (error) {
+        this.error = 'Failed to connect to game server'
+        this.connected = false
+        console.error(error)
+        return false
+      }
+    }, // Загрузка списка доступных комнат
     async loadRooms() {
       this.loading = true
       this.error = null
@@ -154,14 +154,14 @@ async initWebSocket(url: string) {
         this.error = 'Not connected to game server'
         return false
       }
-      
+
       // Сбрасываем флаг ошибки комнаты перед попыткой входа
       this.roomNotFound = false
-      
+
       // Проверяем существование комнаты перед входом
       await this.loadRooms()
-      const roomExists = this.availableRooms.some(room => room.id === roomId)
-      
+      const roomExists = this.availableRooms.some((room) => room.id === roomId)
+
       if (!roomExists) {
         console.error(`Комната с ID ${roomId} не найдена`)
         this.error = `Комната с ID ${roomId} не найдена`
@@ -233,47 +233,47 @@ async initWebSocket(url: string) {
       this.webSocket.sendChatMessage(this.currentRoomId, message)
     },
 
-// Обработчик обновления состояния игры
-handleGameState(data: { game?: GameState; room?: GameRoom }) {
-  if (data.game) {
-    this.gameState = data.game
+    // Обработчик обновления состояния игры
+    handleGameState(data: { game?: GameState; room?: GameRoom }) {
+      if (data.game) {
+        this.gameState = data.game
 
-    // Установка ID игрока, если он еще не установлен
-    if (!this.playerId && this.playerName) {
-      const player = data.game.players.find((p: Player) => p.name === this.playerName)
-      if (player) {
-        this.playerId = player.id
+        // Установка ID игрока, если он еще не установлен
+        if (!this.playerId && this.playerName) {
+          const player = data.game.players.find((p: Player) => p.name === this.playerName)
+          if (player) {
+            this.playerId = player.id
+          }
+        }
       }
-    }
-  }
 
-  // Если пришли данные о комнате, обновляем её в списке доступных комнат
-  if (data.room) {
-    const roomIndex = this.availableRooms.findIndex((r: GameRoom) => r.id === data.room?.id)
-    if (roomIndex >= 0) {
-      this.availableRooms[roomIndex] = data.room
-    } else {
-      this.availableRooms.push(data.room)
-    }
-  }
-},
+      // Если пришли данные о комнате, обновляем её в списке доступных комнат
+      if (data.room) {
+        const roomIndex = this.availableRooms.findIndex((r: GameRoom) => r.id === data.room?.id)
+        if (roomIndex >= 0) {
+          this.availableRooms[roomIndex] = data.room
+        } else {
+          this.availableRooms.push(data.room)
+        }
+      }
+    },
 
-// Обработчик входа в комнату
-handleJoinRoom(data: { room?: GameRoom; player?: Player }) {
-  if (data.room) {
-    const roomIndex = this.availableRooms.findIndex((r: GameRoom) => r.id === data.room?.id)
-    if (roomIndex >= 0) {
-      this.availableRooms[roomIndex] = data.room
-    } else {
-      this.availableRooms.push(data.room)
-    }
+    // Обработчик входа в комнату
+    handleJoinRoom(data: { room?: GameRoom; player?: Player }) {
+      if (data.room) {
+        const roomIndex = this.availableRooms.findIndex((r: GameRoom) => r.id === data.room?.id)
+        if (roomIndex >= 0) {
+          this.availableRooms[roomIndex] = data.room
+        } else {
+          this.availableRooms.push(data.room)
+        }
 
-    // Устанавливаем текущую комнату и ID игрока
-    if (data.player && data.player.id) {
-      this.playerId = data.player.id
-    }
-  }
-},    // Обработчик сообщений чата
+        // Устанавливаем текущую комнату и ID игрока
+        if (data.player && data.player.id) {
+          this.playerId = data.player.id
+        }
+      }
+    }, // Обработчик сообщений чата
     handleChatMessage(message: ChatMessage) {
       this.chatMessages.push(message)
 
@@ -287,18 +287,18 @@ handleJoinRoom(data: { room?: GameRoom; player?: Player }) {
     handleError(error: string) {
       this.error = error
       console.error('WebSocket error:', error)
-      
+
       // Проверка на ошибку входа в несуществующую комнату
       if (error.includes('Комната') && error.includes('не найдена')) {
         // Устанавливаем флаг ошибки комнаты для обработки в компоненте
         this.roomNotFound = true
-        
+
         // Сбрасываем данные комнаты, так как она не существует
         this.currentRoomId = null
         this.gameState = null
       }
     },
-    
+
     // Обработчик отключения WebSocket
     handleDisconnect() {
       console.warn('WebSocket disconnected')
