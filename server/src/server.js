@@ -52,15 +52,25 @@ app.use((req, res, next) => {
 // Маршруты API
 app.use('/api/rooms', roomRoutes)
 
-// Статические файлы (в случае развёртывания клиента вместе с сервером)
-if (process.env.NODE_ENV === 'production') {
-  const staticPath = path.resolve(__dirname, '../../dist')
-  app.use(express.static(staticPath))
+// Добавим маршрут для проверки здоровья сервера
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV });
+});
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(staticPath, 'index.html'))
-  })
-}
+// Обрабатываем запросы к несуществующим API маршрутам
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// В режиме production мы не обслуживаем статические файлы,
+// так как фронтенд деплоится отдельно
+app.get('*', (req, res) => {
+  res.status(200).json({ 
+    message: 'Durak Online Game API Server',
+    env: process.env.NODE_ENV,
+    endpoints: ['/api/rooms', '/health']
+  });
+});
 
 // Обработка ошибок
 app.use((err, req, res, next) => {
