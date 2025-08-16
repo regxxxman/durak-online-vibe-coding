@@ -27,15 +27,17 @@ class WebSocketService {
         const allowedOrigins = [
           process.env.CLIENT_URL, 
           'https://durak-online-vibe-coding-frontend.onrender.com',
-          'https://durak-online-vibe-coding.onrender.com'
+          'https://durak-online-vibe-coding.onrender.com',
+          'https://durak-online-vibe-coding-1.onrender.com', // Добавляем этот домен
+          'render.com' // Разрешаем все поддомены render.com
         ].filter(Boolean); // Удаляем пустые значения
         
         // Логируем информацию о соединении
         console.log(`WebSocket connection attempt from origin: ${origin}`);
-        console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
         
-        // Если origin не указан или он в списке разрешенных, пропускаем клиента
+        // Если origin не указан или он содержит один из разрешенных доменов, пропускаем клиента
         if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
+          console.log(`Разрешено WebSocket соединение с источника: ${origin}`);
           return true;
         }
         
